@@ -3,7 +3,7 @@
 (function () {
   const $ = id => document.getElementById(id), btn = FW.btn;
   let me = FW.store.get('fw.kid', null);
-  let net = null, info = { task: '', stopped: false }, draft = null, last = null, ended = false;
+  let net = null, info = { task: '', stopped: false }, draft = null, last = null, ended = false, loading = false, tries = 0;
   const room = (FW.hashParams().get('r') || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; };
   const TEXT = { send: 'Wird gesendet …', wait: 'Angekommen bei der Lehrkraft.', shown: 'Dein Foto ist an der Tafel.', removed: 'Dein Foto ist nicht mehr an der Tafel.', stopped: 'Gerade werden keine Fotos angenommen.', refused: 'Das Foto wurde nicht angenommen.' };
@@ -23,11 +23,13 @@
 
   function take() {
     FW.pickImage(async f => {
+      loading = true; draft = null; render();
       try {
         const blob = await FW.shrinkImage(f, 1600, 0.9), img = await createImageBitmap(blob);
         const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0);
-        draft = { c, crop: null }; render();
+        draft = { c, crop: null };
       } catch (e) { alert('Das Foto konnte nicht gelesen werden.'); }
+      loading = false; render();
     });
   }
   function rotate() {
@@ -57,8 +59,13 @@
     c.getContext('2d').drawImage(s, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
     const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', 0.8));
     last = { id: FW.rid(10), buf: await blob.arrayBuffer(), w: c.width, h: c.height, s: 'send' };
-    draft = null; render(); if (net.open) transmit();
+    draft = null; tries = 0; render(); if (net.open) transmit();
   }
+  // Ohne Bestätigung der Tafel erneut senden. Bleibt sie aus, die Verbindung neu aufbauen (nach der Kamera oft nötig).
+  setInterval(() => {
+    if (ended || !net || !last || last.s !== 'send') return;
+    if (++tries % 3 === 0) { net.close(); connect(); } else if (net.open) transmit();
+  }, 5000);
   function render() {
     const app = $('app'); app.innerHTML = ''; $('name').textContent = me ? me.name : '';
     if (ended) { app.append(el('h2', '', 'Die Runde ist beendet.'), el('p', '', 'Danke!')); return; }
@@ -72,7 +79,8 @@
       if (FW.tts.ok) h.append(btn('speaker', 'Vorlesen', () => FW.tts.speak(info.task)));
       app.append(h);
     }
-    if (draft) {
+    if (loading) app.append(el('h2', '', 'Foto wird geladen …'));
+    else if (draft) {
       const box = el('div'); box.appendChild(cropper());
       const row = el('div', 'reihe'), go = btn('send', 'Senden', send, 'gruen'); go.disabled = info.stopped;
       row.append(btn('camera', 'Nochmal', take), btn('rotate', 'Drehen', rotate), btn('image', 'Ganzes Bild', () => { draft.crop = null; render(); }), go);

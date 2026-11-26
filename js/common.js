@@ -111,8 +111,15 @@ window.FW = window.FW || {};
     const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
     return new Promise(res => c.toBlob(res, 'image/jpeg', q || 0.82));
   };
-  FW.pickFile = function (accept, cb) { const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => { if (i.files && i.files[0]) cb(i.files[0]); }; i.click(); };
-  FW.pickImage = function (cb) { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.onchange = () => { if (i.files && i.files[0]) cb(i.files[0]); }; i.click(); };
+  // Das Auswahlfeld bleibt fest in der Seite. Ein loses Feld meldet auf dem iPad das Foto nicht zuverlässig.
+  let picker = null;
+  FW.pickImage = function (cb) {
+    if (picker) picker.remove();
+    const i = picker = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.className = 'dateiwahl';
+    i.tabIndex = -1; i.setAttribute('aria-hidden', 'true');
+    i.onchange = () => { const f = i.files && i.files[0]; if (f) cb(f); };
+    document.body.appendChild(i); i.click();
+  };
   FW.fillIcons = () => document.querySelectorAll('[data-ic]').forEach(e => { e.innerHTML = FW.icon(e.dataset.ic); });
   document.addEventListener('DOMContentLoaded', FW.fillIcons);
   FW.icon = (name, extra) => '<svg class="symbol' + (extra ? ' ' + extra : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (IC[name] || '') + '</svg>';

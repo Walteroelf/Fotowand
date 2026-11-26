@@ -2,6 +2,7 @@
 @font-face { font-family: "Andika"; font-weight: 400; font-display: swap; src: url("../schriften/andika-400.woff2") format("woff2"); }
 @font-face { font-family: "Andika"; font-weight: 700; font-display: swap; src: url("../schriften/andika-700.woff2") format("woff2"); }
 [hidden] { display: none !important; }
+.dateiwahl { position: fixed; left: -200px; bottom: 0; width: 1px; height: 1px; opacity: 0; }
 body { background: var(--hg); min-height: 100dvh; display: flex; flex-direction: column; }
 h1, h2, p { margin: 0; }
 h1 { font-size: var(--gr-3); } h2 { font-size: var(--gr-2); }
