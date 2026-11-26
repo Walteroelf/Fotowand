@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://0.peerjs.com wss://0.peerjs.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Fotowand</title>
+<link rel="stylesheet" href="design.css?v=3">
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body class="tafel">
+<header class="kopf"><h1 data-name>Fotowand</h1><p id="auftrag"></p><span class="marke" id="stand">verbinde …</span></header>
+<main id="wand"></main>
+<div id="qrBox" class="gross"><button id="qrKnopf" type="button" aria-label="Schüler-Code vergrößern oder verkleinern"><span id="qr"></span><b id="code">····</b></button>
+  <label class="schalter" id="fernZeile"><input type="checkbox" id="fernAn"> Mit Fernbedienung</label></div>
+<nav id="leiste"></nav>
+<button id="fernKnopf" type="button" class="knopf leise"></button>
+<div id="gross" hidden></div>
+<dialog id="dlg"></dialog>
+<div id="druck"></div>
+<script src="lib/peerjs.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="js/common.js?v=1"></script>
+<script src="js/net.js?v=1"></script>
+<script src="js/wall.js?v=1"></script>
+</body>
+</html>

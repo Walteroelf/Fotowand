@@ -1,0 +1,79 @@
+/* Fotowand: App-Eigenes. Farben und Grundregeln stehen in design.css. */
+@font-face { font-family: "Andika"; font-weight: 400; font-display: swap; src: url("../schriften/andika-400.woff2") format("woff2"); }
+@font-face { font-family: "Andika"; font-weight: 700; font-display: swap; src: url("../schriften/andika-700.woff2") format("woff2"); }
+[hidden] { display: none !important; }
+body { background: var(--hg); min-height: 100dvh; display: flex; flex-direction: column; }
+h1, h2, p { margin: 0; }
+h1 { font-size: var(--gr-3); } h2 { font-size: var(--gr-2); }
+.kopf { display: flex; align-items: center; gap: var(--a-2); flex-wrap: wrap; padding: var(--a-1) var(--a-2); background: var(--karte); border-top: 12px solid transparent; border-bottom: var(--rand-breite) solid var(--linie);
+  border-image: linear-gradient(90deg, var(--hellblau) 0 14.28%, var(--blau) 0 28.57%, var(--gruen) 0 42.85%, var(--hellgruen) 0 57.14%, var(--gelb) 0 71.42%, var(--orange) 0 85.71%, var(--silber) 0) 1 0 0 0; }
+.kopf p { flex: 1; font-size: var(--gr-3); text-align: center; min-width: 200px; }
+.kopf h1 { margin-right: auto; }
+.marke { border: var(--rand-breite) solid var(--rand); border-radius: 99px; padding: 2px 12px; font-size: 16px; }
+.reihe { display: flex; gap: var(--a-1); flex-wrap: wrap; align-items: center; justify-content: center; }
+.knopf { min-height: var(--knopf-hoehe); padding: 0 var(--a-2); }
+.knopf.an { background: var(--gelb); color: var(--dunkelblau); }
+.knopf.riesig { min-height: 120px; font-size: var(--gr-4); width: min(100%, 520px); }
+.schalter { display: flex; align-items: center; gap: 12px; min-height: 48px; }
+.schalter input { width: 28px; height: 28px; accent-color: var(--hellblau); }
+input[type=text], select { min-height: 48px; padding: 8px 12px; border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung); background: var(--karte); color: var(--text); width: 100%; }
+.bildsvg { display: block; width: 100%; height: 100%; }
+.bildsvg.malen { touch-action: none; cursor: crosshair; }
+.stift { width: 56px; height: 56px; border-radius: 50%; border: var(--rand-breite) solid var(--dunkelblau); }
+.stift.an { outline: 5px solid var(--text); outline-offset: 2px; }
+
+/* ---------- Tafel ---------- */
+.tafel { height: 100dvh; overflow: hidden; }
+#wand { flex: 1; min-height: 0; overflow: auto; padding: var(--a-2) var(--a-2) 130px; }
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a-2); }
+.kachel { position: relative; background: var(--karte); border: var(--rand-breite) solid var(--linie); border-radius: var(--rundung); padding: var(--a-1); display: grid; gap: 4px; cursor: pointer; }
+.kachel .bild { aspect-ratio: 4 / 3; display: grid; place-items: center; min-height: 0; }
+.kachel.gewaehlt { border: 6px solid var(--gelb); padding: 4px; }
+.kachel.zu .bild { background: var(--hellblau); border-radius: 8px; color: var(--dunkelblau); font-size: 48px; }
+.gruppen { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--a-2); align-items: start; }
+.gruppen .raster { grid-template-columns: 1fr; }
+.leer { text-align: center; color: var(--leise); font-size: var(--gr-2); padding: var(--a-4); }
+#qrBox { position: fixed; z-index: 4; left: 16px; bottom: 16px; background: var(--karte); border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung-gross); padding: var(--a-1); display: grid; justify-items: center; gap: var(--a-1); }
+#qrKnopf { background: none; border: 0; padding: 0; display: grid; justify-items: center; color: var(--text); }
+#qr canvas, .qr canvas { display: block; width: 96px; height: 96px; border-radius: 8px; image-rendering: pixelated; }
+#code { font-size: var(--gr-2); letter-spacing: 4px; }
+#qrBox.gross { left: 50%; top: calc(50% - 32px); bottom: auto; transform: translate(-50%, -50%); padding: var(--a-2); }
+#qrBox.gross #qr canvas { width: min(40vmin, 440px); height: min(40vmin, 440px); }
+#qrBox.gross #code { font-size: 48px; }
+#qrBox:not(.gross) #fernZeile { display: none; }
+#qrBox:not(.gross) #code { font-size: 16px; }
+#fernKnopf { position: fixed; z-index: 3; right: 16px; bottom: 16px; width: 114px; height: 130px; flex-direction: column; font-size: 15px; line-height: 1.2; padding: 4px; }
+#fernKnopf .symbol { width: 56px; height: 56px; }
+#fernKnopf.an { background: var(--hellgruen); color: var(--dunkelblau); }
+#fernKnopf.warte { background: var(--gelb); color: var(--dunkelblau); }
+#leiste { position: fixed; z-index: 3; left: 146px; right: 146px; bottom: 16px; display: flex; gap: var(--a-1); justify-content: center; flex-wrap: wrap; }
+#gross { position: fixed; inset: 0; z-index: 6; background: var(--hg); display: flex; flex-direction: column; gap: var(--a-1); padding: var(--a-2); }
+#gross .flaeche { flex: 1; min-height: 0; display: grid; gap: var(--a-2); grid-auto-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
+#gross .flaeche.n2, #gross .flaeche.n3, #gross .flaeche.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#gross figure { margin: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; }
+#gross figure svg { flex: 1; min-height: 0; }
+dialog { border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung-gross); background: var(--karte); color: var(--text); width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: var(--a-3); }
+dialog::backdrop { background: rgba(13, 43, 78, .6); }
+.inhalt { display: grid; gap: var(--a-2); justify-items: stretch; }
+.qr { display: grid; justify-items: center; }
+.qr canvas { width: min(52vmin, 360px); height: min(52vmin, 360px); }
+.zahl { font-size: 56px; text-align: center; }
+#druck { display: none; }
+@media (max-width: 700px) { #leiste { left: 8px; right: 8px; bottom: 160px; } #wand { padding-bottom: 240px; } }
+@media print {
+  .tafel { height: auto; overflow: visible; display: block; }
+  .tafel > *:not(#druck) { display: none !important; }
+  #druck { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: #0D2B4E; }
+  #druck h1 { grid-column: 1 / -1; }
+  #druck figure { margin: 0; break-inside: avoid; }
+  #druck svg { width: 100%; height: auto; max-height: 110mm; }
+}
+
+/* ---------- iPad der Kinder und Fernbedienung ---------- */
+.kind main, .fern main { flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--a-2); padding: var(--a-2); text-align: center; }
+.auftrag { font-size: var(--gr-3); }
+.vorschau { width: min(100%, 760px); height: 52dvh; position: relative; }
+.schnitt { max-width: 100%; max-height: 52dvh; touch-action: none; border-radius: 8px; cursor: crosshair; }
+.hinweis { background: var(--gelb); color: var(--dunkelblau); border-radius: var(--rundung); padding: var(--a-1) var(--a-2); }
+.feld { display: flex; gap: var(--a-1); width: min(100%, 360px); }
+.fern .raster { width: 100%; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
