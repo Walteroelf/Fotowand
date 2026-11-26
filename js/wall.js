@@ -167,6 +167,7 @@
   function tile(p, i) {
     const k = el('div', 'kachel' + (S.covered ? ' zu' : '') + (picking && picking.includes(p.id) ? ' gewaehlt' : ''));
     k.tabIndex = 0; k.setAttribute('role', 'button');
+    k.style.borderColor = FW.kidColor(p.name) || '';
     const b = el('div', 'bild'); if (S.covered) b.textContent = String(i + 1); else b.appendChild(FW.picture(p));
     k.appendChild(b); if (S.names && !S.covered) k.appendChild(el('span', '', p.name));
     k.onclick = () => {
@@ -225,7 +226,6 @@
       c.style.width = pw + 'px'; c.style.height = ph + 'px';
       c.style.left = keep(cx, pw, W) + 'px'; c.style.top = keep(cy, ph, H) + 'px';
       c.style.transform = 'rotate(' + s.rot + 'deg)'; c.style.zIndex = p.top;
-      c.style.borderColor = FW.PEN_FRAME[p.top % FW.PEN_FRAME.length];
       if (s.neu) { c.classList.add('neu'); s.neu = false; }
       area.appendChild(c);
     });
@@ -252,7 +252,7 @@
     const g = $('gross'); g.hidden = !view; g.innerHTML = ''; if (!view) return;
     const list = view.ids.map(byId).filter(Boolean), area = el('div', 'flaeche n' + list.length), bar = el('div', 'reihe');
     list.forEach(p => {
-      const f = el('figure'), s = FW.picture(p); f.appendChild(s); if (S.names) f.appendChild(el('figcaption', '', p.name));
+      const f = el('figure'), s = FW.picture(p); f.appendChild(s); f.style.borderColor = FW.kidColor(p.name) || ''; if (S.names) f.appendChild(el('figcaption', '', p.name));
       if (view.draw) FW.drawable(s, p, () => pen, st => { p.strokes.push(st); sync(); });
       area.appendChild(f);
     });

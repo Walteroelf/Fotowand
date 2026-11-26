@@ -32,16 +32,18 @@ input[type=text], select { min-height: 48px; padding: 8px 12px; border: var(--ra
 .wartet { text-align: center; font-size: var(--gr-2); }
 .raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 4px; }
 .raster.fest { flex: 1; min-height: 0; }
-.kachel { position: relative; background: var(--karte); border: var(--rand-breite) solid var(--linie); border-radius: 8px; padding: 2px; display: flex; flex-direction: column; min-height: 0; min-width: 0; cursor: pointer; }
+.kachel { position: relative; background: var(--karte); border: 6px solid var(--linie); border-radius: 8px; padding: 2px; display: flex; flex-direction: column; min-height: 0; min-width: 0; cursor: pointer; }
 .kachel .bild { flex: 1; min-height: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; }
 .kachel > span { font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; }
 .raster:not(.fest) .bild { aspect-ratio: 4 / 3; flex: none; }
-.kachel.gewaehlt { outline: 6px solid var(--gelb); outline-offset: -6px; }
+.kachel.gewaehlt { outline: 8px solid var(--text); outline-offset: -2px; }
 .kachel.zu .bild { background: var(--hellblau); border-radius: 4px; color: var(--dunkelblau); font-size: 48px; }
 .stapel { flex: 1; min-height: 0; position: relative; overflow: hidden; isolation: isolate; }
 .stapel .kachel { position: absolute; border-width: 6px; padding: 0; border-radius: 4px; outline: 1px solid var(--dunkelblau); }
+#gross figure { border: 8px solid transparent; border-radius: 8px; }
+.vorschau.gerahmt { border: 8px solid transparent; border-radius: 8px; }
 .stapel .kachel > span { position: absolute; left: 0; right: 0; bottom: 0; background: var(--karte); }
-.stapel .kachel.gewaehlt { outline: 8px solid var(--gelb); outline-offset: 0; }
+.stapel .kachel.gewaehlt { outline: 8px solid var(--text); outline-offset: 0; }
 .stapel .kachel:focus-visible { outline: 4px solid var(--gelb); }
 .stapel .neu { animation: wurf .45s ease-out; }
 @keyframes wurf { from { scale: 1.8; opacity: 0; } }
@@ -95,3 +97,7 @@ dialog::backdrop { background: rgba(13, 43, 78, .6); }
 .hinweis { background: var(--gelb); color: var(--dunkelblau); border-radius: var(--rundung); padding: var(--a-1) var(--a-2); }
 .feld { display: flex; gap: var(--a-1); width: min(100%, 360px); }
 .fern .raster { width: 100%; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+/* Farbiger Hintergrund auf dem iPad des Kindes: immer dunkelblaue Schrift, Knöpfe weiß mit Rand */
+body.kind.bunt { --text: var(--dunkelblau); --karte: var(--weiss); --rand: var(--dunkelblau); color: var(--text); }
+.bunt .knopf, .bunt .hinweis { background: var(--weiss); color: var(--dunkelblau); border: var(--rand-breite) solid var(--dunkelblau); }

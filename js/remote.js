@@ -44,7 +44,7 @@
     // Das älteste wartende Foto groß zum Prüfen
     if (wait.length) {
       const p = wait[0]; app.append(el('h2', '', 'Prüfen (' + wait.length + ' warten)'));
-      const v = el('div', 'vorschau'); if (urls[p.id]) v.appendChild(FW.picture(full(p))); else v.textContent = 'Foto lädt …'; app.append(v);
+      const v = el('div', 'vorschau gerahmt'); v.style.borderColor = FW.kidColor(p.name) || ''; if (urls[p.id]) v.appendChild(FW.picture(full(p))); else v.textContent = 'Foto lädt …'; app.append(v);
       if (st.names) app.append(el('p', '', p.name));
       const r = el('div', 'reihe'), yes = btn('check', 'Zeigen', () => cmd('approve', p.id), 'gruen'); yes.disabled = !urls[p.id];
       r.append(btn('trash', 'Verwerfen', () => cmd('remove', p.id), 'orange'), yes); app.append(r);
@@ -52,7 +52,7 @@
     if (wall.length) {
       app.append(el('h2', '', 'An der Tafel'));
       const g = el('div', 'raster');
-      wall.forEach(p => { const k = el('button', 'kachel'), b = el('div', 'bild'); if (urls[p.id]) b.appendChild(FW.picture(full(p))); k.appendChild(b); if (st.names) k.appendChild(el('span', '', p.name)); k.onclick = () => { openId = p.id; draw = false; detail(); }; g.appendChild(k); });
+      wall.forEach(p => { const k = el('button', 'kachel'), b = el('div', 'bild'); if (urls[p.id]) b.appendChild(FW.picture(full(p))); k.appendChild(b); k.style.borderColor = FW.kidColor(p.name) || ''; if (st.names) k.appendChild(el('span', '', p.name)); k.onclick = () => { openId = p.id; draw = false; detail(); }; g.appendChild(k); });
       app.append(g);
     }
     if ($('dlg').open) detail();

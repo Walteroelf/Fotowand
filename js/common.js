@@ -60,8 +60,11 @@ window.FW = window.FW || {};
   FW.fmtDate = ts => ts ? new Date(ts).toLocaleDateString('de-DE') + ' ' + FW.fmtTime(ts) : '–';
 
   // Pseudonyme: Adjektiv + Tier + Zahl, nur männliche Artikel ("Blauer Falke")
-  const ADJ = ['Blauer', 'Roter', 'Grüner', 'Gelber', 'Bunter', 'Lustiger', 'Kleiner', 'Schneller', 'Stiller', 'Goldener'];
-  const NOUN = ['Falke', 'Fuchs', 'Hase', 'Igel', 'Löwe', 'Hund', 'Panda', 'Frosch', 'Delfin', 'Papagei', 'Pinguin', 'Tiger', 'Bär', 'Adler', 'Wolf'];
+  // Die Farbe im Namen ist auch die Farbe auf dem iPad und der Rahmen um das Foto
+  const FARBE = { Blauer: '#4DB2E6', Grüner: '#46A84A', Hellgrüner: '#A6D27A', Gelber: '#FFD100', Oranger: '#F39200', Roter: '#EF6B45', Silberner: '#B9C1C8' };
+  const ADJ = Object.keys(FARBE);
+  FW.kidColor = name => FARBE[String(name).split(' ')[0]] || null;
+  const NOUN = ['Affe', 'Falke', 'Fuchs', 'Hase', 'Igel', 'Löwe', 'Hund', 'Panda', 'Frosch', 'Delfin', 'Papagei', 'Pinguin', 'Tiger', 'Bär', 'Adler', 'Wolf'];
   FW.pseudonym = () => FW.pick(ADJ) + ' ' + FW.pick(NOUN) + ' ' + FW.ri(10, 99);
 
 
@@ -116,6 +119,7 @@ window.FW = window.FW || {};
   FW.pickImage = function (cb) {
     if (picker) picker.remove();
     const i = picker = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.className = 'dateiwahl';
+    i.setAttribute('capture', 'environment'); // öffnet auf dem iPad direkt die Kamera
     i.tabIndex = -1; i.setAttribute('aria-hidden', 'true');
     i.onchange = () => { const f = i.files && i.files[0]; if (f) cb(f); };
     document.body.appendChild(i); i.click();
@@ -149,7 +153,6 @@ window.FW = window.FW || {};
   // Bild mit Markierungen als SVG. So passen Foto und Striche in jeder Größe genau übereinander.
   const NS = 'http://www.w3.org/2000/svg';
   FW.PEN = ['#F39200', '#FFD100', '#0067B1', '#46A84A'];
-  FW.PEN_FRAME = ['#4DB2E6', '#FFD100', '#46A84A', '#F39200', '#A6D27A', '#0067B1'];
   FW.line = function (p, st) {
     const l = document.createElementNS(NS, 'polyline'), pts = st.p.length > 1 ? st.p : [st.p[0], st.p[0]];
     l.setAttribute('points', pts.map(a => (a[0] * p.w) + ',' + (a[1] * p.h)).join(' '));

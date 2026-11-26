@@ -68,6 +68,8 @@
   }, 5000);
   function render() {
     const app = $('app'); app.innerHTML = ''; $('name').textContent = me ? me.name : '';
+    const color = me && !ended ? FW.kidColor(me.name) : null;
+    document.body.classList.toggle('bunt', !!color); document.body.style.background = color || '';
     if (ended) { app.append(el('h2', '', 'Die Runde ist beendet.'), el('p', '', 'Danke!')); return; }
     if (!me) {
       const row = el('form', 'feld'), i = el('input'); i.type = 'text'; i.maxLength = 4; i.autocapitalize = 'characters'; i.setAttribute('aria-label', 'Code'); const ok = btn('check', 'Los', null, ''); ok.type = 'submit';
@@ -94,6 +96,7 @@
   }
   function join(r) {
     if (!me || me.room !== r) me = { room: r, pid: FW.rid(10), name: FW.pseudonym() };
+    if (!FW.kidColor(me.name)) me.name = FW.pseudonym(); // ältere Namen ohne Farbe ersetzen
     FW.store.set('fw.kid', me); connect(); render();
   }
   document.addEventListener('DOMContentLoaded', () => { if (room) join(room); else if (me) join(me.room); else render(); });
