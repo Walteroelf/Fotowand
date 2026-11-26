@@ -135,6 +135,8 @@ window.FW = window.FW || {};
     document.title = document.title.replace('Fotowand', FW.NAME);
   });
   Object.assign(IC, {
+    full: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+    unfull: '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/>',
     stopp: '<rect x="5" y="5" width="14" height="14" rx="3"/>',
     compare: '<rect x="3.5" y="5" width="7.5" height="14" rx="1.5"/><rect x="13" y="5" width="7.5" height="14" rx="1.5"/>',
     eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
@@ -147,6 +149,7 @@ window.FW = window.FW || {};
   // Bild mit Markierungen als SVG. So passen Foto und Striche in jeder Größe genau übereinander.
   const NS = 'http://www.w3.org/2000/svg';
   FW.PEN = ['#F39200', '#FFD100', '#0067B1', '#46A84A'];
+  FW.PEN_FRAME = ['#4DB2E6', '#FFD100', '#46A84A', '#F39200', '#A6D27A', '#0067B1'];
   FW.line = function (p, st) {
     const l = document.createElementNS(NS, 'polyline'), pts = st.p.length > 1 ? st.p : [st.p[0], st.p[0]];
     l.setAttribute('points', pts.map(a => (a[0] * p.w) + ',' + (a[1] * p.h)).join(' '));
@@ -170,6 +173,21 @@ window.FW = window.FW || {};
     svg.onpointermove = e => { if (!st || st.p.length > 400) return; st.p.push(pos(e)); const n = FW.line(p, st); el.replaceWith(n); el = n; };
     svg.onpointerup = svg.onpointercancel = () => { if (st) { const s = st; st = null; done(s); } };
   };
+  // Vollbild. Wo das Gerät es nicht kann (z. B. iPhone), gibt es keinen Knopf.
+  const root = document.documentElement;
+  FW.canFull = !!(root.requestFullscreen || root.webkitRequestFullscreen);
+  const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  function paintFull(b) { b.innerHTML = FW.icon(isFull() ? 'unfull' : 'full'); b.setAttribute('aria-label', isFull() ? 'Vollbild beenden' : 'Vollbild'); }
+  FW.fullBtn = function () {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'knopf leise vollbild'; paintFull(b);
+    b.onclick = () => {
+      const f = isFull() ? (document.exitFullscreen || document.webkitExitFullscreen).call(document) : (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+      if (f && f.catch) f.catch(() => {});
+    };
+    return b;
+  };
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => document.querySelectorAll('.vollbild').forEach(paintFull)));
+  document.addEventListener('DOMContentLoaded', () => { const k = document.querySelector('.kind .kopf, .fern .kopf'); if (k && FW.canFull) k.appendChild(FW.fullBtn()); });
   FW.btn = function (ic, text, fn, cls) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'knopf ' + (cls || 'leise');
     b.innerHTML = (ic ? FW.icon(ic) : '') + (text ? '<span>' + FW.esc(text) + '</span>' : ''); b.onclick = fn; return b;

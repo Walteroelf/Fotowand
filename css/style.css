@@ -25,29 +25,47 @@ input[type=text], select { min-height: 48px; padding: 8px 12px; border: var(--ra
 
 /* ---------- Tafel ---------- */
 .tafel { height: 100dvh; overflow: hidden; }
-#wand { flex: 1; min-height: 0; overflow: auto; padding: var(--a-2) var(--a-2) 130px; }
-.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--a-2); }
-.kachel { position: relative; background: var(--karte); border: var(--rand-breite) solid var(--linie); border-radius: var(--rundung); padding: var(--a-1); display: grid; gap: 4px; cursor: pointer; }
-.kachel .bild { aspect-ratio: 4 / 3; display: grid; place-items: center; min-height: 0; }
-.kachel.gewaehlt { border: 6px solid var(--gelb); padding: 4px; }
-.kachel.zu .bild { background: var(--hellblau); border-radius: 8px; color: var(--dunkelblau); font-size: 48px; }
-.gruppen { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--a-2); align-items: start; }
+.band { border-top: 6px solid transparent; background: var(--karte); border-image: linear-gradient(90deg, var(--hellblau) 0 14.28%, var(--blau) 0 28.57%, var(--gruen) 0 42.85%, var(--hellgruen) 0 57.14%, var(--gelb) 0 71.42%, var(--orange) 0 85.71%, var(--silber) 0) 1 0 0 0; }
+.band h1 { text-align: center; font-size: var(--gr-3); padding: 2px var(--a-2); }
+.band.leerband h1 { display: none; }
+#wand { flex: 1; min-height: 0; overflow: hidden; padding: 4px; display: flex; flex-direction: column; }
+.wartet { text-align: center; font-size: var(--gr-2); }
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 4px; }
+.raster.fest { flex: 1; min-height: 0; }
+.kachel { position: relative; background: var(--karte); border: var(--rand-breite) solid var(--linie); border-radius: 8px; padding: 2px; display: flex; flex-direction: column; min-height: 0; min-width: 0; cursor: pointer; }
+.kachel .bild { flex: 1; min-height: 0; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; }
+.kachel > span { font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; }
+.raster:not(.fest) .bild { aspect-ratio: 4 / 3; flex: none; }
+.kachel.gewaehlt { outline: 6px solid var(--gelb); outline-offset: -6px; }
+.kachel.zu .bild { background: var(--hellblau); border-radius: 4px; color: var(--dunkelblau); font-size: 48px; }
+.stapel { flex: 1; min-height: 0; position: relative; overflow: hidden; isolation: isolate; }
+.stapel .kachel { position: absolute; border-width: 6px; padding: 0; border-radius: 4px; outline: 1px solid var(--dunkelblau); }
+.stapel .kachel > span { position: absolute; left: 0; right: 0; bottom: 0; background: var(--karte); }
+.stapel .kachel.gewaehlt { outline: 8px solid var(--gelb); outline-offset: 0; }
+.stapel .kachel:focus-visible { outline: 4px solid var(--gelb); }
+.stapel .neu { animation: wurf .45s ease-out; }
+@keyframes wurf { from { scale: 1.8; opacity: 0; } }
+.gruppen { flex: 1; min-height: 0; overflow: auto; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--a-2); align-items: start; }
 .gruppen .raster { grid-template-columns: 1fr; }
 .leer { text-align: center; color: var(--leise); font-size: var(--gr-2); padding: var(--a-4); }
-#qrBox { position: fixed; z-index: 4; left: 16px; bottom: 16px; background: var(--karte); border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung-gross); padding: var(--a-1); display: grid; justify-items: center; gap: var(--a-1); }
+#fuss { display: flex; align-items: center; justify-content: center; gap: var(--a-1); min-height: 60px; padding: 4px 68px; background: var(--karte); border-top: 1px solid var(--linie); }
+#leiste { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+#leiste .knopf { min-height: 48px; min-width: 48px; padding: 0 12px; font-size: 16px; }
+#stand { font-size: 14px; color: var(--leise); white-space: nowrap; }
+#qrBox { position: fixed; z-index: 5; left: 4px; bottom: 4px; background: var(--karte); border-radius: 8px; display: grid; justify-items: center; gap: var(--a-1); }
 #qrKnopf { background: none; border: 0; padding: 0; display: grid; justify-items: center; color: var(--text); }
-#qr canvas, .qr canvas { display: block; width: 96px; height: 96px; border-radius: 8px; image-rendering: pixelated; }
-#code { font-size: var(--gr-2); letter-spacing: 4px; }
-#qrBox.gross { left: 50%; top: calc(50% - 32px); bottom: auto; transform: translate(-50%, -50%); padding: var(--a-2); }
+#qr canvas { display: block; width: 52px; height: 52px; border-radius: 4px; image-rendering: pixelated; }
+.qr canvas { display: block; border-radius: 8px; image-rendering: pixelated; }
+#code { font-size: 48px; letter-spacing: 4px; }
+#qrBox.gross { left: 50%; top: calc(50% - 32px); bottom: auto; transform: translate(-50%, -50%); padding: var(--a-2); border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung-gross); }
 #qrBox.gross #qr canvas { width: min(40vmin, 440px); height: min(40vmin, 440px); }
-#qrBox.gross #code { font-size: 48px; }
-#qrBox:not(.gross) #fernZeile { display: none; }
-#qrBox:not(.gross) #code { font-size: 16px; }
-#fernKnopf { position: fixed; z-index: 3; right: 16px; bottom: 16px; width: 114px; height: 130px; flex-direction: column; font-size: 15px; line-height: 1.2; padding: 4px; }
-#fernKnopf .symbol { width: 56px; height: 56px; }
+#qrBox:not(.gross) #fernZeile, #qrBox:not(.gross) #code { display: none; }
+#fernKnopf { position: fixed; z-index: 3; right: 4px; bottom: 4px; width: 52px; min-height: 52px; height: 52px; padding: 0; }
+#fernKnopf .symbol { width: 30px; height: 30px; }
 #fernKnopf.an { background: var(--hellgruen); color: var(--dunkelblau); }
 #fernKnopf.warte { background: var(--gelb); color: var(--dunkelblau); }
-#leiste { position: fixed; z-index: 3; left: 146px; right: 146px; bottom: 16px; display: flex; gap: var(--a-1); justify-content: center; flex-wrap: wrap; }
+@media (max-width: 1100px) { #leiste .knopf span { display: none; } }
+.kopf .vollbild { min-height: 48px; width: 48px; padding: 0; }
 #gross { position: fixed; inset: 0; z-index: 6; background: var(--hg); display: flex; flex-direction: column; gap: var(--a-1); padding: var(--a-2); }
 #gross .flaeche { flex: 1; min-height: 0; display: grid; gap: var(--a-2); grid-auto-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
 #gross .flaeche.n2, #gross .flaeche.n3, #gross .flaeche.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -60,7 +78,6 @@ dialog::backdrop { background: rgba(13, 43, 78, .6); }
 .qr canvas { width: min(52vmin, 360px); height: min(52vmin, 360px); }
 .zahl { font-size: 56px; text-align: center; }
 #druck { display: none; }
-@media (max-width: 700px) { #leiste { left: 8px; right: 8px; bottom: 160px; } #wand { padding-bottom: 240px; } }
 @media print {
   .tafel { height: auto; overflow: visible; display: block; }
   .tafel > *:not(#druck) { display: none !important; }

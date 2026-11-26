@@ -4,11 +4,13 @@
 (function () {
   const $ = id => document.getElementById(id), btn = FW.btn;
   const KEY = 'fw.wall', MAX = 3e6, MAX_ALL = 150, MAX_KID = 20, HOURS = 4;
-  const S = Object.assign({ room: '', remote: false, token: '', task: '', multi: true, names: false, groups: false, stopped: false, covered: false }, FW.store.get(KEY, {}));
+  const S = Object.assign({ room: '', remote: false, token: '', task: '', multi: true, names: false, groups: false, pile: false, expect: 0, stopped: false, covered: false }, FW.store.get(KEY, {}));
   const photos = [];            // {id, pid, name, buf, url, w, h, state:'wait'|'wall', strokes, group, ts}
   const kids = new Map();       // conn -> {pid, name}
   let host = null, remote = null, pairing = null, pairKey = FW.rid(24);
   let view = null;              // {ids, draw} = Großansicht
+  let drops = 0;                // zählt die hingeworfenen Fotos, das neueste liegt oben
+  let perm = [];                // zufällige Reihenfolge der Plätze im Fotostapel
   let picking = null, pen = 0;  // picking = ausgewählte Fotos zum Vergleichen
   const save = () => FW.store.set(KEY, S);
   const byId = id => photos.find(p => p.id === id);
@@ -85,13 +87,13 @@
     if (view) { view.ids = view.ids.filter(id => id !== p.id); if (!view.ids.length) view = null; }
     if (!quiet) ui();
   }
-  function clearAll() { photos.slice().forEach(p => remove(p, true)); view = null; picking = null; $('druck').innerHTML = ''; ui(); }
+  function clearAll() { photos.slice().forEach(p => remove(p, true)); perm = []; view = null; picking = null; $('druck').innerHTML = ''; ui(); }
   function random() {
     const l = shown(); if (!l.length) return;
     const other = l.filter(p => !view || p.id !== view.ids[0]);
     S.covered = false; view = { ids: [FW.pick(other.length ? other : l).id] }; ui();
   }
-  function set(k, v) { S[k] = v; save(); if (k === 'task' || k === 'stopped') kids.forEach((x, c) => sendInfo(c)); if (k === 'covered' && v) view = null; ui(); }
+  function set(k, v) { if (k === 'pile' || k === 'expect') { perm = []; photos.forEach(p => { delete p.spot; }); } S[k] = v; save(); if (k === 'task' || k === 'stopped') kids.forEach((x, c) => sendInfo(c)); if (k === 'covered' && v) view = null; ui(); }
 
   /* ---------- Fernbedienung ---------- */
   function command(d) {
@@ -176,30 +178,75 @@
     k.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); k.click(); } };
     return k;
   }
+  // Spalten und Zeilen so wählen, dass n Fotos (Querformat 4:3) möglichst groß in die Fläche passen
+  function fit(n, W, H) {
+    let best = { cols: 1, rows: n, s: 0 };
+    for (let cols = 1; cols <= n; cols++) { const rows = Math.ceil(n / cols), s = Math.min(W / cols / 4, H / rows / 3); if (s > best.s) best = { cols, rows, s }; }
+    return best;
+  }
   function drawWall() {
-    const w = $('wand'), l = shown(); w.innerHTML = '';
-    if (S.remote && waiting().length) w.appendChild(el('p', 'leer', waiting().length === 1 ? '1 Foto wartet' : waiting().length + ' Fotos warten'));
+    const w = $('wand'), l = shown(); w.innerHTML = ''; w.className = '';
+    if (S.remote && waiting().length) w.appendChild(el('p', 'wartet', waiting().length === 1 ? '1 Foto wartet' : waiting().length + ' Fotos warten'));
     if (!l.length) return;
     const grid = list => { const g = el('div', 'raster'); list.forEach(p => g.appendChild(tile(p, l.indexOf(p)))); return g; };
-    if (!S.groups) { w.appendChild(grid(l)); return; }
-    const cols = el('div', 'gruppen');
-    ['Noch offen', 'Gruppe A', 'Gruppe B', 'Gruppe C'].forEach((n, i) => {
-      const list = l.filter(p => p.group === i); if (!list.length) return;
-      const c = el('section'); c.append(el('h2', '', n), grid(list)); cols.appendChild(c);
-    });
-    w.appendChild(cols);
+    if (S.groups) {
+      const cols = el('div', 'gruppen');
+      ['Noch offen', 'Gruppe A', 'Gruppe B', 'Gruppe C'].forEach((n, i) => {
+        const list = l.filter(p => p.group === i); if (!list.length) return;
+        const c = el('section'); c.append(el('h2', '', n), grid(list)); cols.appendChild(c);
+      });
+      w.appendChild(cols); return;
+    }
+    const area = el('div', S.pile ? 'stapel' : 'raster fest'); w.appendChild(area);
+    const W = area.clientWidth, H = area.clientHeight;
+    if (S.pile) { pile(area, l, W, H); return; }
+    // Raster: alle Fotos ohne Scrollen sichtbar. Die erwartete Zahl hält die Größe ruhig.
+    const f = fit(Math.max(S.expect || 1, l.length), W - 8, H - 8);
+    area.style.gridTemplateColumns = 'repeat(' + f.cols + ', minmax(0, 1fr))';
+    area.style.gridTemplateRows = 'repeat(' + f.rows + ', minmax(0, 1fr))';
+    l.forEach((p, i) => area.appendChild(tile(p, i)));
   }
+  // Fotostapel: erst wird reihum der ganze Hintergrund bedeckt, danach landen die Fotos kreuz und quer darüber
+  function pile(area, l, W, H) {
+    const f = fit(S.expect || 20, W, H), cells = f.cols * f.rows;
+    if (perm.length !== cells) { perm = [...Array(cells).keys()]; for (let i = cells - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [perm[i], perm[j]] = [perm[j], perm[i]]; } }
+    const cw = W / f.cols, ch = H / f.rows;
+    l.forEach((p, i) => {
+      if (!p.spot) {
+        const used = new Set(photos.filter(x => x.spot).map(x => x.spot.k)); let k = 0; while (used.has(k)) k++;
+        p.spot = { k, x: Math.random(), y: Math.random(), rot: Math.round(Math.random() * 28 - 14), neu: true };
+        p.top = ++drops;
+      }
+      const s = p.spot, c = tile(p, i);
+      const scale = Math.min(cw * 1.42 / p.w, ch * 1.42 / p.h), pw = p.w * scale, ph = p.h * scale;
+      const cx = s.k < cells ? (perm[s.k] % f.cols + 0.35 + s.x * 0.3) * cw : s.x * W;
+      const cy = s.k < cells ? (Math.floor(perm[s.k] / f.cols) + 0.35 + s.y * 0.3) * ch : s.y * H;
+      const keep = (v, size, max) => Math.min(max - size / 2, Math.max(size / 2, v)) - size / 2;
+      c.style.width = pw + 'px'; c.style.height = ph + 'px';
+      c.style.left = keep(cx, pw, W) + 'px'; c.style.top = keep(cy, ph, H) + 'px';
+      c.style.transform = 'rotate(' + s.rot + 'deg)'; c.style.zIndex = p.top;
+      c.style.borderColor = FW.PEN_FRAME[p.top % FW.PEN_FRAME.length];
+      if (s.neu) { c.classList.add('neu'); s.neu = false; }
+      area.appendChild(c);
+    });
+  }
+  addEventListener('resize', () => drawWall());
   function drawBar() {
     const n = $('leiste'); n.innerHTML = '';
     if (picking) {
       const go = btn('compare', picking.length + ' vergleichen', () => { view = { ids: picking.slice() }; picking = null; ui(); }, 'gelb'); go.disabled = picking.length < 2;
-      n.append(go, btn('close', 'Abbrechen', () => { picking = null; ui(); })); return;
+      n.append(go, btn('close', 'Abbrechen', () => { picking = null; ui(); })); return finish(n);
     }
     n.append(btn(S.stopped ? 'play' : 'stopp', S.stopped ? 'Fotos annehmen' : 'Fotos stoppen', () => set('stopped', !S.stopped), S.stopped ? 'orange' : 'leise'),
       btn(S.covered ? 'eye' : 'eyeoff', S.covered ? 'Aufdecken' : 'Verdecken', () => set('covered', !S.covered), S.covered ? 'gelb' : 'leise'));
     const c = btn('compare', 'Vergleichen', () => { picking = []; set('covered', false); }); c.disabled = shown().length < 2;
     const z = btn('dice', 'Zufall', random); z.disabled = !shown().length;
-    n.append(c, z, btn('menu', 'Menü', menu));
+    n.append(c, z, btn('menu', 'Menü', menu)); finish(n);
+  }
+  // Auf schmalen Bildschirmen nur Symbole, darum bekommt jeder Knopf auch einen Namen
+  function finish(n) {
+    n.querySelectorAll('button').forEach(b => { b.title = b.textContent; b.setAttribute('aria-label', b.textContent); });
+    if (FW.canFull) n.appendChild(FW.fullBtn());
   }
   function drawBig() {
     const g = $('gross'); g.hidden = !view; g.innerHTML = ''; if (!view) return;
@@ -219,6 +266,7 @@
       if (S.groups) ['offen', 'A', 'B', 'C'].forEach((t, i) => bar.appendChild(btn('', t, () => { p.group = i; ui(); }, p.group === i ? 'an' : 'leise')));
       bar.appendChild(btn('trash', 'Von der Wand nehmen', () => remove(p), 'orange'));
     }
+    if (FW.canFull) bar.appendChild(FW.fullBtn());
     g.append(area, bar);
   }
   function ui() {
@@ -226,14 +274,19 @@
     $('fernAn').checked = S.remote;
     const f = $('fernKnopf'), on = remoteOn();
     f.className = 'knopf leise' + (S.remote ? (on ? ' an' : ' warte') : '');
-    f.innerHTML = FW.icon('remote') + '<span>' + (!S.remote ? 'Fern­bedienung' : on ? 'verbunden' : S.token ? 'getrennt' : 'koppeln') + '</span>';
+    const label = 'Fernbedienung' + (!S.remote ? '' : on ? ': verbunden' : S.token ? ': getrennt' : ': koppeln');
+    f.innerHTML = FW.icon(S.remote && on ? 'check' : 'remote'); f.title = label; f.setAttribute('aria-label', label);
+    $('auftrag').parentNode.classList.toggle('leerband', !S.task);
     drawWall(); drawBar(); drawBig(); sync();
   }
   function menu() {
     const field = el('label', 'inhalt', 'Auftrag (steht über der Wand und auf den iPads)'), inp = el('input'); inp.type = 'text'; inp.maxLength = 120; inp.value = S.task; inp.placeholder = 'Fotografiere deine Rechnung'; inp.onchange = () => set('task', inp.value.trim()); field.appendChild(inp);
     const sw = (key, text, inv) => { const l = el('label', 'schalter'), c = el('input'); c.type = 'checkbox'; c.checked = inv ? !S[key] : S[key]; c.onchange = () => set(key, inv ? !c.checked : c.checked); l.append(c, document.createTextNode(text)); return l; };
+    const choose = (text, key, options) => { const l = el('label', 'inhalt', text), s = el('select'); options.forEach(o => { const x = el('option', '', o[1]); x.value = o[0]; s.appendChild(x); }); s.value = Number(S[key]); s.onchange = () => set(key, key === 'pile' ? s.value === '1' : Number(s.value)); l.appendChild(s); return l; };
+    const look = choose('Darstellung', 'pile', [[0, 'Geordnet'], [1, 'Bunter Fotostapel']]);
+    const size = choose('Wie viele Fotos erwartest du? (bestimmt die Größe)', 'expect', [[0, 'Automatisch'], [10, 'etwa 10'], [20, 'etwa 20'], [30, 'etwa 30'], [50, 'etwa 50']]);
     const pdf = btn('download', 'Als PDF drucken oder sichern', () => { $('dlg').close(); print_(); }); pdf.disabled = !shown().length;
-    dialog('Menü', [field, sw('multi', 'Nur ein Foto pro Kind (ein neues ersetzt das alte)', true), sw('names', 'Namen zeigen (Fantasienamen)'), sw('groups', 'In Gruppen sortieren (A, B, C)'), pdf,
+    dialog('Menü', [field, look, size, sw('multi', 'Nur ein Foto pro Kind (ein neues ersetzt das alte)', true), sw('names', 'Namen zeigen (Fantasienamen)'), sw('groups', 'In Gruppen sortieren (A, B, C)'), pdf,
       btn('trash', 'Beenden und alles löschen', confirmEnd, 'orange')]);
   }
   function print_() {
