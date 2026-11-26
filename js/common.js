@@ -116,10 +116,10 @@ window.FW = window.FW || {};
   };
   // Das Auswahlfeld bleibt fest in der Seite. Ein loses Feld meldet auf dem iPad das Foto nicht zuverlässig.
   let picker = null;
-  FW.pickImage = function (cb) {
+  FW.pickImage = function (cb, library) {
     if (picker) picker.remove();
     const i = picker = document.createElement('input'); i.type = 'file'; i.accept = 'image/*'; i.className = 'dateiwahl';
-    i.setAttribute('capture', 'environment'); // öffnet auf dem iPad direkt die Kamera
+    if (!library) i.setAttribute('capture', 'environment'); // öffnet auf dem iPad direkt die Kamera
     i.tabIndex = -1; i.setAttribute('aria-hidden', 'true');
     i.onchange = () => { const f = i.files && i.files[0]; if (f) cb(f); };
     document.body.appendChild(i); i.click();

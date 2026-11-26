@@ -21,7 +21,7 @@
   }
   const transmit = () => net.send({ t: 'photo', id: last.id, buf: last.buf, w: last.w, h: last.h });
 
-  function take() {
+  function take(library) {
     FW.pickImage(async f => {
       loading = true; draft = null; render();
       try {
@@ -30,7 +30,7 @@
         draft = { c, crop: null };
       } catch (e) { alert('Das Foto konnte nicht gelesen werden.'); }
       loading = false; render();
-    });
+    }, library === true);
   }
   function rotate() {
     const a = draft.c, c = document.createElement('canvas'); c.width = a.height; c.height = a.width;
@@ -85,10 +85,11 @@
     else if (draft) {
       const box = el('div'); box.appendChild(cropper());
       const row = el('div', 'reihe'), go = btn('send', 'Senden', send, 'gruen'); go.disabled = info.stopped;
-      row.append(btn('camera', 'Nochmal', take), btn('rotate', 'Drehen', rotate), btn('image', 'Ganzes Bild', () => { draft.crop = null; render(); }), go);
+      row.append(btn('camera', 'Nochmal', () => take()), btn('rotate', 'Drehen', rotate), btn('image', 'Ganzes Bild', () => { draft.crop = null; render(); }), go);
       app.append(box, el('p', '', 'Zuschneiden: Ziehe mit dem Finger ein Rechteck.'), row);
     } else {
-      const b = btn('camera', 'Foto', take, 'riesig'); b.disabled = info.stopped; app.append(b);
+      const b = btn('camera', 'Foto', () => take(), 'riesig'), lib = btn('image', 'Aus der Mediathek', () => take(true), 'leise klein');
+      b.disabled = lib.disabled = info.stopped; app.append(b, lib);
       if (last) app.append(el('h2', '', TEXT[last.s] || ''));
     }
     if (info.stopped) app.append(el('p', 'hinweis', TEXT.stopped));

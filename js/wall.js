@@ -9,6 +9,7 @@
   const kids = new Map();       // conn -> {pid, name}
   let host = null, remote = null, pairing = null, pairKey = FW.rid(24);
   let view = null;              // {ids, draw} = Großansicht
+  let dragging = false;         // solange ein Foto gezogen wird, nicht neu zeichnen
   let drops = 0;                // zählt die hingeworfenen Fotos, das neueste liegt oben
   let perm = [];                // zufällige Reihenfolge der Plätze im Fotostapel
   let picking = null, pen = 0;  // picking = ausgewählte Fotos zum Vergleichen
@@ -186,6 +187,7 @@
     return best;
   }
   function drawWall() {
+    if (dragging) return;
     const w = $('wand'), l = shown(); w.innerHTML = ''; w.className = '';
     if (S.remote && waiting().length) w.appendChild(el('p', 'wartet', waiting().length === 1 ? '1 Foto wartet' : waiting().length + ' Fotos warten'));
     if (!l.length) return;
@@ -220,15 +222,42 @@
       }
       const s = p.spot, c = tile(p, i);
       const scale = Math.min(cw * 1.42 / p.w, ch * 1.42 / p.h), pw = p.w * scale, ph = p.h * scale;
-      const cx = s.k < cells ? (perm[s.k] % f.cols + 0.35 + s.x * 0.3) * cw : s.x * W;
-      const cy = s.k < cells ? (Math.floor(perm[s.k] / f.cols) + 0.35 + s.y * 0.3) * ch : s.y * H;
+      // s.mx / s.my: von Hand verschoben (Mitte als Anteil der Fläche)
+      const cx = s.mx != null ? s.mx * W : s.k < cells ? (perm[s.k] % f.cols + 0.35 + s.x * 0.3) * cw : s.x * W;
+      const cy = s.my != null ? s.my * H : s.k < cells ? (Math.floor(perm[s.k] / f.cols) + 0.35 + s.y * 0.3) * ch : s.y * H;
       const keep = (v, size, max) => Math.min(max - size / 2, Math.max(size / 2, v)) - size / 2;
       c.style.width = pw + 'px'; c.style.height = ph + 'px';
       c.style.left = keep(cx, pw, W) + 'px'; c.style.top = keep(cy, ph, H) + 'px';
       c.style.transform = 'rotate(' + s.rot + 'deg)'; c.style.zIndex = p.top;
       if (s.neu) { c.classList.add('neu'); s.neu = false; }
+      movable(c, p, area, pw, ph);
       area.appendChild(c);
     });
+  }
+  // Mit Finger oder Maus verschieben. Ein kurzes Antippen öffnet das Foto wie bisher.
+  function movable(c, p, area, pw, ph) {
+    const open = c.onclick; let start = null, moved = false;
+    c.onpointerdown = e => {
+      if (e.button || dragging) return;
+      c.setPointerCapture(e.pointerId); moved = false; dragging = true;
+      start = { id: e.pointerId, x: e.clientX, y: e.clientY, left: parseFloat(c.style.left), top: parseFloat(c.style.top) };
+    };
+    c.onpointermove = e => {
+      if (!start || e.pointerId !== start.id) return;
+      const dx = e.clientX - start.x, dy = e.clientY - start.y;
+      if (!moved && Math.hypot(dx, dy) < 12) return;
+      if (!moved) { moved = true; p.top = ++drops; c.style.zIndex = p.top; c.classList.remove('neu'); }
+      const W = area.clientWidth, H = area.clientHeight, keep = (v, max) => Math.min(max, Math.max(0, v));
+      const x = keep(start.left + dx, W - pw), y = keep(start.top + dy, H - ph);
+      c.style.left = x + 'px'; c.style.top = y + 'px'; p.spot.mx = (x + pw / 2) / W; p.spot.my = (y + ph / 2) / H;
+    };
+    c.onpointerup = c.onpointercancel = c.onlostpointercapture = e => {
+      if (!start || e.pointerId !== start.id) return;
+      start = null; dragging = false;
+      // erst nach dem Klick-Ereignis neu zeichnen, damit neu angekommene Fotos erscheinen
+      setTimeout(drawWall, 50);
+    };
+    c.onclick = e => { if (moved) { moved = false; return; } open(e); };
   }
   addEventListener('resize', () => drawWall());
   function drawBar() {

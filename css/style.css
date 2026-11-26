@@ -14,7 +14,9 @@ h1 { font-size: var(--gr-3); } h2 { font-size: var(--gr-2); }
 .reihe { display: flex; gap: var(--a-1); flex-wrap: wrap; align-items: center; justify-content: center; }
 .knopf { min-height: var(--knopf-hoehe); padding: 0 var(--a-2); }
 .knopf.an { background: var(--gelb); color: var(--dunkelblau); }
-.knopf.riesig { min-height: 120px; font-size: var(--gr-4); width: min(100%, 520px); }
+.knopf.riesig { min-height: 52dvh; font-size: 56px; width: min(100%, 900px); flex-direction: column; gap: var(--a-2); border-radius: var(--rundung-gross); }
+.knopf.riesig .symbol { width: 160px; height: 160px; stroke-width: 1.6; }
+.knopf.klein { min-height: 48px; font-size: 16px; }
 .schalter { display: flex; align-items: center; gap: 12px; min-height: 48px; }
 .schalter input { width: 28px; height: 28px; accent-color: var(--hellblau); }
 input[type=text], select { min-height: 48px; padding: 8px 12px; border: var(--rand-breite) solid var(--rand); border-radius: var(--rundung); background: var(--karte); color: var(--text); width: 100%; }
@@ -39,7 +41,7 @@ input[type=text], select { min-height: 48px; padding: 8px 12px; border: var(--ra
 .kachel.gewaehlt { outline: 8px solid var(--text); outline-offset: -2px; }
 .kachel.zu .bild { background: var(--hellblau); border-radius: 4px; color: var(--dunkelblau); font-size: 48px; }
 .stapel { flex: 1; min-height: 0; position: relative; overflow: hidden; isolation: isolate; }
-.stapel .kachel { position: absolute; border-width: 6px; padding: 0; border-radius: 4px; outline: 1px solid var(--dunkelblau); }
+.stapel .kachel { touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; position: absolute; border-width: 6px; padding: 0; border-radius: 4px; outline: 1px solid var(--dunkelblau); }
 #gross figure { border: 8px solid transparent; border-radius: 8px; }
 .vorschau.gerahmt { border: 8px solid transparent; border-radius: 8px; }
 .stapel .kachel > span { position: absolute; left: 0; right: 0; bottom: 0; background: var(--karte); }
